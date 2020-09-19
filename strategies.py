@@ -1,4 +1,5 @@
 import backtrader as bt
+from LSTM_Classification import *
 
 
 class PrintClose(bt.Strategy):
@@ -33,6 +34,8 @@ class NNclassification(bt.Strategy):
             return
 
     def next(self):
+        # Generate Signal
+
         # Check for open orders
         if self.order:
             return
