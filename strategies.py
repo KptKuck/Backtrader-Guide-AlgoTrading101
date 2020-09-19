@@ -1,26 +1,50 @@
 import backtrader as bt
 
+
 class PrintClose(bt.Strategy):
 
     def log(self, txt, dt=None):
         dt = dt or self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt)) #Print date and close
+        print('%s, %s' % (dt.isoformat(), txt))  # Print date and close
 
     def __init__(self):
-        #Keep a reference to the "close" line in the data[0] dataseries
+        # Keep a reference to the "close" line in the data[0] dataseries
         self.dataclose = self.datas[0].close
 
     def next(self):
-        #Log closing price to 2 decimals
+        # Log closing price to 2 decimals
         self.log('Close: %.2f' % self.dataclose[0])
 
-class MAcrossover(bt.Strategy): 
-    # Moving average parameters
-    params = (('pfast',7),('pslow',92),)
+
+class NNclassification(bt.Strategy):
 
     def log(self, txt, dt=None):
         dt = dt or self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt)) # Comment this line when running optimization
+        print('%s, %s' % (dt.isoformat(), txt))  # Comment this line when running optimiz
+
+    def __init__(self):
+        self.dataclose = self.datas[0].close
+        # Order variable will contain ongoing order details/status
+        self.order = None
+
+    def notify_order(self, order):
+        if order.status in [order.Submitted, order.Accepted]:
+            # An active Buy/Sell order has been submitted/accepted - Nothing to do
+            return
+
+    def next(self):
+        # Check for open orders
+        if self.order:
+            return
+
+
+class MAcrossover(bt.Strategy):
+    # Moving average parameters
+    params = (('pfast', 7), ('pslow', 92),)
+
+    def log(self, txt, dt=None):
+        dt = dt or self.datas[0].datetime.date(0)
+        print('%s, %s' % (dt.isoformat(), txt))  # Comment this line when running optimization
 
     def __init__(self):
         self.dataclose = self.datas[0].close
@@ -31,7 +55,6 @@ class MAcrossover(bt.Strategy):
         self.fast_sma = bt.indicators.MovingAverageSimple(self.datas[0], period=self.params.pfast)
         ''' Using the built-in crossover indicator
         self.crossover = bt.indicators.CrossOver(self.slow_sma, self.fast_sma)'''
-
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -69,13 +92,13 @@ class MAcrossover(bt.Strategy):
         # Check if we are in the market
         if not self.position:
             # We are not in the market, look for a signal to OPEN trades
-                
-            #If the 20 SMA is above the 50 SMA
+
+            # If the 20 SMA is above the 50 SMA
             if self.fast_sma[0] > self.slow_sma[0] and self.fast_sma[-1] < self.slow_sma[-1]:
                 self.log('BUY CREATE, %.2f' % self.dataclose[0])
                 # Keep track of the created order to avoid a 2nd order
                 self.order = self.buy()
-            #Otherwise if the 20 SMA is below the 50 SMA   
+            # Otherwise if the 20 SMA is below the 50 SMA
             elif self.fast_sma[0] < self.slow_sma[0] and self.fast_sma[-1] > self.slow_sma[-1]:
                 self.log('SELL CREATE, %.2f' % self.dataclose[0])
                 # Keep track of the created order to avoid a 2nd order
@@ -86,12 +109,14 @@ class MAcrossover(bt.Strategy):
                 self.log('CLOSE CREATE, %.2f' % self.dataclose[0])
                 self.order = self.close()
 
+
 class Screener_SMA(bt.Analyzer):
-    params = (('period',20), ('devfactor',2),)
+    params = (('period', 20), ('devfactor', 2),)
 
     def start(self):
-        self.bbands = {data: bt.indicators.BollingerBands(data, period=self.params.period, devfactor=self.params.devfactor)
-                     for data in self.datas}
+        self.bbands = {
+            data: bt.indicators.BollingerBands(data, period=self.params.period, devfactor=self.params.devfactor)
+            for data in self.datas}
 
     def stop(self):
         self.rets['over'] = list()
@@ -104,18 +129,19 @@ class Screener_SMA(bt.Analyzer):
             else:
                 self.rets['under'].append(node)
 
+
 class AverageTrueRange(bt.Strategy):
 
     def log(self, txt, dt=None):
         dt = dt or self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt)) #Print date and close
-        
+        print('%s, %s' % (dt.isoformat(), txt))  # Print date and close
+
     def __init__(self):
-        #Keep a reference to the "close" line in the data[0] dataseries
+        # Keep a reference to the "close" line in the data[0] dataseries
         self.dataclose = self.datas[0].close
         self.datahigh = self.datas[0].high
         self.datalow = self.datas[0].low
-        
+
     def next(self):
         range_total = 0
         for i in range(-13, 1):
@@ -124,6 +150,7 @@ class AverageTrueRange(bt.Strategy):
         ATR = range_total / 14
 
         self.log('Close: %.2f, ATR: %.4f' % (self.dataclose[0], ATR))
+
 
 class BtcSentiment(bt.Strategy):
     params = (('period', 10), ('devfactor', 1),)
@@ -135,7 +162,8 @@ class BtcSentiment(bt.Strategy):
     def __init__(self):
         self.btc_price = self.datas[0].close
         self.google_sentiment = self.datas[1].close
-        self.bbands = bt.indicators.BollingerBands(self.google_sentiment, period=self.params.period, devfactor=self.params.devfactor)
+        self.bbands = bt.indicators.BollingerBands(self.google_sentiment, period=self.params.period,
+                                                   devfactor=self.params.devfactor)
 
         self.order = None
 
@@ -160,7 +188,7 @@ class BtcSentiment(bt.Strategy):
         if self.order:
             return
 
-        #Long signal 
+        # Long signal
         if self.google_sentiment > self.bbands.lines.top[0]:
             # Check if we are in the market
             if not self.position:
@@ -169,9 +197,9 @@ class BtcSentiment(bt.Strategy):
                 # We are not in the market, we will open a trade
                 self.log('***BUY CREATE, %.2f' % self.btc_price[0])
                 # Keep track of the created order to avoid a 2nd order
-                self.order = self.buy()       
+                self.order = self.buy()
 
-        #Short signal
+                # Short signal
         elif self.google_sentiment < self.bbands.lines.bot[0]:
             # Check if we are in the market
             if not self.position:
@@ -181,8 +209,8 @@ class BtcSentiment(bt.Strategy):
                 self.log('***SELL CREATE, %.2f' % self.btc_price[0])
                 # Keep track of the created order to avoid a 2nd order
                 self.order = self.sell()
-        
-        #Neutral signal - close any open trades     
+
+        # Neutral signal - close any open trades
         else:
             if self.position:
                 # We are in the market, we will close the existing trade
