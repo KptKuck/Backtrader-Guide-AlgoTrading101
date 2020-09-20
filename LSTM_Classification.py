@@ -20,7 +20,7 @@ from tensorflow.keras.optimizers import Adam
 # END_TRAIN_DATE = '2017-12-31'
 # START_TEST_DATE = '2018-01-01'
 # END_TEST_DATE = '2018-03-09'
-LOOKBACK = 7
+LOOKBACK = 20
 STEP = 1
 FORECAST = 1
 INIT_CAPITAL = 10000
@@ -70,6 +70,7 @@ def create_dataset(data):
     X, Y = np.array(X), np.array(Y)
     return X, Y
 
+#def create_NN_input(data):
 
 
 
@@ -77,8 +78,8 @@ def create_dataset(data):
 def plot_history(history):
     # summarize history for accuracy
     plt.subplot(2, 1, 1)
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
     plt.axhline(y=0.5, color='grey', linestyle='--')
     plt.title('model accuracy')
     plt.ylabel('accuracy')
@@ -129,11 +130,12 @@ def train_model(model, X_train, Y_train, X_test, Y_test):
                         validation_data=(X_test, Y_test),
                         callbacks=[reduce_lr, checkpointer, es],
                         shuffle=True)
+    return history
 
 
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=50, min_lr=0.000001, verbose=0)
 checkpointer = ModelCheckpoint(filepath="testtest.hdf5", verbose=0, save_best_only=True)
-es = EarlyStopping(patience=100)
+es = EarlyStopping(patience=400)
 
 
 # model = get_lr_model(X_train.shape[1], X_train.shape[-1])

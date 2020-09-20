@@ -17,28 +17,7 @@ class PrintClose(bt.Strategy):
         self.log('Close: %.2f' % self.dataclose[0])
 
 
-class NNclassification(bt.Strategy):
 
-    def log(self, txt, dt=None):
-        dt = dt or self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt))  # Comment this line when running optimiz
-
-    def __init__(self):
-        self.dataclose = self.datas[0].close
-        # Order variable will contain ongoing order details/status
-        self.order = None
-
-    def notify_order(self, order):
-        if order.status in [order.Submitted, order.Accepted]:
-            # An active Buy/Sell order has been submitted/accepted - Nothing to do
-            return
-
-    def next(self):
-        # Generate Signal
-
-        # Check for open orders
-        if self.order:
-            return
 
 
 class MAcrossover(bt.Strategy):
