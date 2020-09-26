@@ -6,6 +6,8 @@ from sklearn.metrics import matthews_corrcoef
 
 from strategies import *
 
+import advance_plotting as ADVplot
+
 # Instantiate Cerebro engine
 cerebro = bt.Cerebro()
 
@@ -15,6 +17,10 @@ data = bt.feeds.YahooFinanceCSVData(
     fromdate=datetime.datetime(2015, 2, 17),
     todate=datetime.datetime(2018, 1, 1))
 
+
+
+
+
 cerebro.adddata(data)
 
 START_TRAIN_DATE: str = '2015-02-17'
@@ -23,6 +29,8 @@ START_TEST_DATE = '2018-01-01'
 END_TEST_DATE = '2020-03-09'
 
 bars = pd.read_csv('TSLA.csv')
+ADVplot.plot_dataset(bars, 'TSLA')
+
 
 data2 = bt.feeds.GenericCSVData(
 
@@ -59,7 +67,7 @@ history = train_model(model, X_train, Y_train, X_test, Y_test)
 
 
 
-plot_history(history)
+#plot_history(history)
 pred = model.predict(X_test)
 
 pred = [1 if p > 0.5 else 0 for p in pred]

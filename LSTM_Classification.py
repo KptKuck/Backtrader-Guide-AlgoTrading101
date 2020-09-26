@@ -15,7 +15,7 @@ from tensorflow.keras.layers import Input, GaussianNoise
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import plot_model
-
+import advance_plotting as ADVplot
 
 LOOKBACK = 7
 STEP = 1
@@ -26,6 +26,7 @@ STAKE = 10
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=50, min_lr=0.000001, verbose=0)
 checkpointer = ModelCheckpoint(filepath="testtest.hdf5", verbose=0, save_best_only=True)
 es = EarlyStopping(patience=400)
+
 
 def create_dataset(data):
     highp = pd.to_numeric(data.iloc[:, 2])
@@ -78,8 +79,8 @@ def create_dataset(data):
 def plot_history(history):
     # summarize history for accuracy
     plt.subplot(2, 1, 1)
-    plt.plot(history.history['accuracy'])
-    plt.plot(history.history['val_accuracy'])
+    #plt.plot(history.history['accuracy'])
+    #plt.plot(history.history['val_accuracy'])
     plt.axhline(y=0.5, color='grey', linestyle='--')
     plt.title('model accuracy')
     plt.ylabel('accuracy')
