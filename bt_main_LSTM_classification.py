@@ -48,18 +48,16 @@ test_set = bars[(bars['Date'] > START_TEST_DATE) & (bars['Date'] < END_TEST_DATE
 X_train, Y_train = create_dataset(train_set)
 X_test, Y_test = create_dataset(test_set)
 
-model = get_lr_model(X_train.shape[1], X_train.shape[-1])
+
+
+
+
+model = get_lstm_model(X_train.shape[1], X_train.shape[-1])
 model.summary()
 
 history = train_model(model, X_train, Y_train, X_test, Y_test)
 
-#history = model.fit(X_train, Y_train,
-#                    epochs=1000,
-#                   batch_size=64,
-#                    verbose=0,
-#                    validation_data=(X_test, Y_test),
-#                    callbacks=[reduce_lr, checkpointer, es],
-#                    shuffle=True)
+
 
 plot_history(history)
 pred = model.predict(X_test)
@@ -84,6 +82,8 @@ pred = [0.] * LOOKBACK + pred + [
 class NNclassification(bt.Strategy):
 
     def log(self, txt, dt=None):
+        if not self.printlog:
+            return
         dt = dt or self.datas[0].datetime.date(0)
         print('%s, %s' % (dt.isoformat(), txt))  # Comment this line when running optimiz
 
@@ -103,6 +103,7 @@ class NNclassification(bt.Strategy):
         self.volume1 = self.datas[1].volume
 
         self.signal_last = None
+        self.printlog = True
 
         # ohlbar = [self.data1.lines[i][0] for i in range(data.size())]
         # self.pred = model.predict(self.datas[:])
@@ -168,7 +169,7 @@ class NNclassification(bt.Strategy):
 
             X.append(x_i)
 
-        X = np.array(X[:130])
+        X = np.array(X[:93])
         return X
 
     def notify_order(self, order):
@@ -191,7 +192,7 @@ class NNclassification(bt.Strategy):
 
     def next(self):
         # Generate Signal
-        self.bt_pd = self.__bt_to_pandas__(150)
+        self.bt_pd = self.__bt_to_pandas__(100)
         self.NN_input = self.calc_NN_input()
 
         # self.log('Close: %.2f, ATR: %.4f' % (self.dataclose[0], ATR))
@@ -243,12 +244,14 @@ class NNclassification(bt.Strategy):
 # Add strategy to Cerebro
 cerebro.addstrategy(NNclassification)
 
+cerebro.addanalyzer(bt.analyzers.DrawDown, _name='drawdown')
+
 # Default position size
-#cerebro.addsizer(bt.sizers.SizerFix, stake=3)
+cerebro.addsizer(bt.sizers.SizerFix, stake=3)
 
 start_portfolio_value = cerebro.broker.getvalue()
 # Run Cerebro Engine
-results = cerebro.run(maxcpus=4)
+results = cerebro.run(maxcpus=1)
 pl = cerebro.plot()
 
 end_portfolio_value = cerebro.broker.getvalue()

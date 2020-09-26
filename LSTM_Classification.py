@@ -5,27 +5,27 @@
 import matplotlib.pylab as plt
 import numpy as np
 import pandas as pd
+import pydot
+import graphviz
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Dense, Dropout, Flatten
+from tensorflow.keras.layers import LSTM, Bidirectional
 from tensorflow.keras.layers import Input, GaussianNoise
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers import Adam
-
-# symbol = 'LTC1518'
-# bars = pd.read_csv('./data/%s.csv' % symbol, header=0, parse_dates=['Date'])
+from tensorflow.keras.utils import plot_model
 
 
-# START_TRAIN_DATE = '2015-01-01'
-# END_TRAIN_DATE = '2017-12-31'
-# START_TEST_DATE = '2018-01-01'
-# END_TEST_DATE = '2018-03-09'
-LOOKBACK = 20
+LOOKBACK = 7
 STEP = 1
 FORECAST = 1
 INIT_CAPITAL = 10000
 STAKE = 10
 
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=50, min_lr=0.000001, verbose=0)
+checkpointer = ModelCheckpoint(filepath="testtest.hdf5", verbose=0, save_best_only=True)
+es = EarlyStopping(patience=400)
 
 def create_dataset(data):
     highp = pd.to_numeric(data.iloc[:, 2])
@@ -70,7 +70,7 @@ def create_dataset(data):
     X, Y = np.array(X), np.array(Y)
     return X, Y
 
-#def create_NN_input(data):
+
 
 
 
@@ -107,19 +107,23 @@ def get_lr_model(x1, x2):
     output = Dense(1, activation="sigmoid", name="out")(x)
     final_model = Model(inputs=[main_input], outputs=[output])
     final_model.compile(optimizer=Adam(lr=0.001, amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
+    plot_model(final_model, show_shapes=True, to_file='predict_lstm_autoencoder.png')
     return final_model
 
 
 def get_lstm_model(x1, x2):
     main_input = Input(shape=(x1, x2,), name='main_input')
-    x = GaussianNoise(0.01)(main_input)
-    x = Flatten()(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.5)(x)
-    output = Dense(1, activation="sigmoid", name="out")(x)
-    final_model = Model(inputs=[main_input], outputs=[output])
-    final_model.compile(optimizer=Adam(lr=0.001, amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
-    return final_model
+
+    model = Sequential()
+    model.add(LSTM(50, activation='relu',  input_shape=(x1, x2)))
+    model.add(Dense(1))
+    model.compile(optimizer='adam', loss='mse')
+
+    #output = Dense(1, activation="sigmoid", name="out")(x)
+    #final_model = Model(inputs=[main_input], outputs=[output])
+    #final_model.compile(optimizer=Adam(lr=0.001, amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
+    #plot_model(model, show_shapes=True, to_file='predict_lstm_autoencoder.png')
+    return model
 
 
 def train_model(model, X_train, Y_train, X_test, Y_test):
@@ -133,78 +137,18 @@ def train_model(model, X_train, Y_train, X_test, Y_test):
     return history
 
 
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=50, min_lr=0.000001, verbose=0)
-checkpointer = ModelCheckpoint(filepath="testtest.hdf5", verbose=0, save_best_only=True)
-es = EarlyStopping(patience=400)
 
 
-# model = get_lr_model(X_train.shape[1], X_train.shape[-1])
-# model = get_model(X_train.shape[1], X_train.shape[-1])
-# model.summary()
 
 
-# model.load_weights('testtest.hdf5')
-# pred = model.predict(X_test)
-# plot_history(history)
-
-# pred = [1 if p > 0.5 else 0 for p in pred]
-# C = confusion_matrix(Y_test, pred)
-#
-# print 'MATTHEWS CORRELATION'
-# print matthews_corrcoef(Y_test, pred)
-# print 'CONFUSION MATRIX'
-# print(C / C.astype(np.float).sum(axis=1))
-# print 'CLASSIFICATION REPORT'
-# print classification_report(Y_test, pred)
-# print '-' * 20
 
 
-# In[ ]:
 
 
-# pred = [1 if p == 1 else -1 for p in pred]  # we need to change NN's 0 output to -1 for our strategy
-# pred = [p if i % FORECAST == 0 else 0 for i, p in enumerate(pred)]
-# pred = [0.] * (LOOKBACK) + pred + [
-#     0] * FORECAST  # first LOOKBACK items needed to make first forecast + items we shifted
-#
 
 
-# class MachineLearningForecastingStrategy(Strategy):
-#
-#     def __init__(self, symbol, bars, pred):
-#         self.symbol = symbol
-#         self.bars = bars
-#
-#     def generate_signals(self):
-#         signals = pd.DataFrame(index=self.bars.index)
-#         signals['signal'] = pred
-#         return signals
 
 
-# preparing for forecasting for tomorrow!
-# test_set['Close'] = test_set['Close'].shift(-FORECAST)
-#
-# rfs = MachineLearningForecastingStrategy('LTC', test_set, pred)
-# signals = rfs.generate_signals()
-# portfolio = MarketIntradayPortfolio('LTC', test_set, signals, INIT_CAPITAL, STAKE)
-# returns = portfolio.backtest_portfolio()
-
-
-# returns['signal'] = signals
-# our_pct_growth = returns['total'].pct_change().cumsum()
-# benchmark_ptc_growth = test_set['Close'].pct_change().cumsum()
-
-
-# plt.figure()
-# plt.plot(returns['total'])
-# plt.show()
-
-
-# plt.figure()
-# plt.plot(our_pct_growth, label = 'ML long/short strategy', linewidth=2)
-# plt.plot(benchmark_ptc_growth, linestyle = '--', label = 'Buy and hold strategy', linewidth=2)
-# plt.legend()
-# plt.show()
 
 
 def sharpe(returns):

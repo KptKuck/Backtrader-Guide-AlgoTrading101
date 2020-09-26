@@ -63,7 +63,7 @@ def load_dataset(prefix=''):
 
 # fit and evaluate a model
 def evaluate_model(trainX, trainy, testX, testy):
-	verbose, epochs, batch_size = 0, 15, 64
+	verbose, epochs, batch_size = 0, 1, 64
 	n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainy.shape[1]
 	model = Sequential()
 	model.add(LSTM(100, input_shape=(n_timesteps,n_features)))
