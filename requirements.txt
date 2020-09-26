@@ -4,3 +4,7 @@ tensorflow-gpu~=2.0.0
 matplotlib~=3.3.2
 backtrader~=1.9.76.123
 scikit-learn~=0.23.2
+finplot~=1.2.1
+yfinance~=0.1.54
+pydot~=1.4.1
+graphviz~=0.14.1
