@@ -7,7 +7,8 @@ import numpy as np
 import pandas as pd
 import pydot
 import graphviz
-from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+import tensorflow as tf
+from tensorflow.keras.callbacks import *
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Dense, Dropout, Flatten
 from tensorflow.keras.layers import LSTM, Bidirectional
@@ -15,17 +16,26 @@ from tensorflow.keras.layers import Input, GaussianNoise
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import plot_model
+
+
+print(tf.__version__)
+
+import datetime
 import advance_plotting as ADVplot
 
-LOOKBACK = 7
+LOOKBACK = 12
 STEP = 1
 FORECAST = 1
 INIT_CAPITAL = 10000
 STAKE = 10
 
+log_dir = "logs\\fit\\{0}".format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
+
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=50, min_lr=0.000001, verbose=0)
 checkpointer = ModelCheckpoint(filepath="testtest.hdf5", verbose=0, save_best_only=True)
 es = EarlyStopping(patience=400)
+
 
 
 def create_dataset(data):
@@ -111,14 +121,35 @@ def get_lr_model(x1, x2):
     plot_model(final_model, show_shapes=True, to_file='predict_lstm_autoencoder.png')
     return final_model
 
+def get_lstm_class_model(x1, x2, y1, y2):
+    #verbose, epochs, batch_size = 0, 1, 64
+    n_timesteps, n_features, n_outputs = x1.shape[1], x1.shape[2], y1.shape[1]
+
+    model = Sequential()
+    model.add(LSTM(100, input_shape=(n_timesteps, n_features)))
+    model.add(Dropout(0.5))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(n_outputs, activation='softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    # fit network
+    #model.fit(trainX, trainy, epochs=epochs, batch_size=batch_size, verbose=verbose)
+    # evaluate model
+    #_, accuracy = model.evaluate(testX, testy, batch_size=batch_size, verbose=0)
+
+    return model
 
 def get_lstm_model(x1, x2):
     main_input = Input(shape=(x1, x2,), name='main_input')
 
     model = Sequential()
-    model.add(LSTM(50, activation='relu',  input_shape=(x1, x2)))
+    model.add(LSTM(200, activation='relu', kernel_initializer='he_normal', input_shape=(x1, x2)))
+    model.add(Dense(50, activation='relu', kernel_initializer='he_normal'))
+    model.add(Dense(50, activation='relu', kernel_initializer='he_normal'))
     model.add(Dense(1))
     model.compile(optimizer='adam', loss='mse')
+
+
+
 
     #output = Dense(1, activation="sigmoid", name="out")(x)
     #final_model = Model(inputs=[main_input], outputs=[output])
@@ -130,10 +161,10 @@ def get_lstm_model(x1, x2):
 def train_model(model, X_train, Y_train, X_test, Y_test):
     history = model.fit(X_train, Y_train,
                         epochs=1000,
-                        batch_size=64,
-                        verbose=0,
+                        batch_size=32,
+                        verbose=2,
                         validation_data=(X_test, Y_test),
-                        callbacks=[reduce_lr, checkpointer, es],
+                        callbacks=[tensorboard_callback, reduce_lr, checkpointer, es],
                         shuffle=True)
     return history
 

@@ -8,3 +8,4 @@ finplot~=1.2.1
 yfinance~=0.1.54
 pydot~=1.4.1
 graphviz~=0.14.1
+scipy~=1.5.2
