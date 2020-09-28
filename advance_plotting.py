@@ -10,30 +10,30 @@ end_t = int(time())
 start_t = end_t - 12*30*24*60*60 # twelve months
 symbol = 'SPY'
 interval = '1d'
+plots = []
 
 def plot_bars_peaks(bars,peaksH, peaksL):
 
     df = bars
-    df = df.rename(columns={'Date': 'time', 'Open': 'open', 'Close': 'close', 'High': 'high', 'Low': 'low', 'Volume': 'volume'})
-    df = df.astype({'time': 'datetime64[ns]'})
+    #df = df.rename(columns={'T': 'time', 'Open': 'open', 'Close': 'close', 'High': 'high', 'Low': 'low', 'Volume': 'volume'})
+    #df = df.astype({'time': 'datetime64[ns]'})
 
-    ax, ax2 = fplt.create_plot('Peaks on SYMBOL', rows=2, maximize=False)
-    candles = df[['time', 'open', 'close', 'high', 'low']]
+    ax = fplt.create_plot('Peaks on SYMBOL', rows=1, maximize=False)
+    candles = df[['Date', 'Open', 'Close', 'High', 'Low']]
+
+    #plots.append(fplt.candlestick_ochl(candles, ax=ax))
 
 
-    fplt.candlestick_ochl(candles, ax=ax)
 
-    # place some dumb markers on low peaks
-    #lo_wicks = df[['open', 'close']].T.min() - df['low']
     pSeriesL = pd.Series(peaksL)
-    df.loc[pSeriesL, 'markerL'] = df['low']
-    fplt.plot(df['time'], df['markerL'], ax=ax, color='#990000', style='^', legend='local low',width=3)
+    df.loc[pSeriesL, 'markerL'] = df['Low']
+    plots.append(fplt.plot(df['time'], df['markerL'], ax=ax, color='#990000', style='^', legend='local low',width=3))
 
-    # place some dumb markers on high peaks
+
 
     pSeriesH = pd.Series(peaksH)
-    df.loc[pSeriesH, 'markerH'] = df['high']
-    fplt.plot(df['time'], df['markerH'], ax=ax, color='#4a5', style='v', legend='local high', width=2)
+    df.loc[pSeriesH, 'markerH'] = df['High']
+    plots.append(fplt.plot(df['time'], df['markerH'], ax=ax, color='#4a5', style='v', legend='local high', width=2))
 
 
     fplt.autoviewrestore()

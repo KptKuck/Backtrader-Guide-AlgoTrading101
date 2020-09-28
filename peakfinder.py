@@ -3,18 +3,20 @@ import numpy as np
 import pandas as pd
 import advance_plotting as ADV
 from scipy.signal import find_peaks
+import yfinance as yf
+
 from collections import *
 
-bars = pd.read_csv('TSLA.csv')
-x = bars['Close']
+btc = yf.download('BTC-USD', '2019-09-01',  interval="1H")
+
+btcNp = btc.to_numpy()
+bars = pd.read_csv('AUDCAD-M1-Forex_245.csv')
+
+xClose = bars['Close']
 xNp = bars.to_numpy()
 
-#fpPar = [namedtuple('Parameter', 'Name, Value')]
-fpParD ={
-  "distance": "10",
-  "prominence": "10",
-  "hight": "0"
-}
+
+
 fpPar = {}
 
 fpPar["height"] = None
