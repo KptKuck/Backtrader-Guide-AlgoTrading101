@@ -16,24 +16,26 @@ def plot_bars_peaks(bars,peaksH, peaksL):
 
     df = bars
     #df = df.rename(columns={'T': 'time', 'Open': 'open', 'Close': 'close', 'High': 'high', 'Low': 'low', 'Volume': 'volume'})
-    #df = df.astype({'time': 'datetime64[ns]'})
+    df = df.rename(columns={'Date_Time': 'Date'})
+
+    #df = df.astype({'Date': 'datetime64[ns]'})
 
     ax = fplt.create_plot('Peaks on SYMBOL', rows=1, maximize=False)
     candles = df[['Date', 'Open', 'Close', 'High', 'Low']]
 
-    #plots.append(fplt.candlestick_ochl(candles, ax=ax))
+    plots.append(fplt.candlestick_ochl(candles, ax=ax))
 
 
 
     pSeriesL = pd.Series(peaksL)
     df.loc[pSeriesL, 'markerL'] = df['Low']
-    plots.append(fplt.plot(df['time'], df['markerL'], ax=ax, color='#990000', style='^', legend='local low',width=3))
+    plots.append(fplt.plot(df['Date'], df['markerL'], ax=ax, color='#990000', style='^', legend='local low',width=3))
 
 
 
     pSeriesH = pd.Series(peaksH)
     df.loc[pSeriesH, 'markerH'] = df['High']
-    plots.append(fplt.plot(df['time'], df['markerH'], ax=ax, color='#4a5', style='v', legend='local high', width=2))
+    plots.append(fplt.plot(df['Date'], df['markerH'], ax=ax, color='#4a5', style='v', legend='local high', width=2))
 
 
     fplt.autoviewrestore()

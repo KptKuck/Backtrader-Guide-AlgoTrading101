@@ -10,7 +10,7 @@ from collections import *
 btc = yf.download('BTC-USD', '2019-09-01',  interval="1H")
 
 btcNp = btc.to_numpy()
-bars = pd.read_csv('AUDCAD-M1-Forex_245.csv')
+bars = pd.read_csv('AUDCAD-M1-Forex_245.csv', header=0, nrows=20000, parse_dates=[[0, 1]])
 
 xClose = bars['Close']
 xNp = bars.to_numpy()
@@ -22,10 +22,10 @@ fpPar = {}
 fpPar["height"] = None
 fpPar["threshold"] = None
 fpPar["distance"] = None
-fpPar["prominence"] = 30
+fpPar["prominence"] = None
 fpPar["width"] = None
 fpPar["wlen"] = None
-fpPar["rel_height"] = 0.5
+fpPar["rel_height"] = 0.1
 fpPar["plateau_size"] = None
 
 
