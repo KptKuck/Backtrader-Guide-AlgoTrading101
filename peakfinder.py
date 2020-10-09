@@ -8,8 +8,8 @@ import logging
 from UTIL.logger import init_logger
 import UTIL.Results as mDir
 
-
 from collections import *
+
 # init logger
 
 log = init_logger(__name__, show_debug=True)
@@ -30,51 +30,49 @@ if res[0]:
 else:
     print("res not ok")
 
-
-
-
-btc = yf.download('BTC-USD', '2019-09-01',  interval="1H")
+btc = yf.download('BTC-USD', '2019-09-01', interval="1H")
 
 btcNp = btc.to_numpy()
+log.info("Read CSV Data")
 bars = pd.read_csv('AUDCAD_raw_tick-M5-NoSession.csv', header=0, nrows=20000, parse_dates=[0])
+
+log.info("Dataframe Size: %d", bars.size)
+log.info("Dataframe Shape %s", bars.shape.__str__())
 
 xClose = bars['Close']
 xNp = bars.to_numpy()
-
-
 
 fpPar = {}
 
 fpPar["height"] = None
 fpPar["threshold"] = None
-fpPar["distance"] = None
-fpPar["prominence"] = None
+fpPar["distance"] = 30
+fpPar["prominence"] = 0.005  # 0.001 = 1 Pip
 fpPar["width"] = None
 fpPar["wlen"] = None
 fpPar["rel_height"] = 0.1
 fpPar["plateau_size"] = None
 
+log.info("FindPeaks Input Parameter")
+for key in fpPar:
+    log.info("%s: %s ", key, fpPar[key]  )
 
 
 
 
-def findPeaks(x,  par):
+def findPeaks(x, par):
     peaksH, propsH = find_peaks(x[:, 2], **par)
 
     peaksL, propsL = find_peaks(-x[:, 2], **par)
+
+    log.info("peaksH: %s  peaksL: %s ", peaksH.size, peaksL.size)
 
     return peaksH, peaksL, propsL, propsH
 
 
 peaksH, peaksL, propsL, propsH = findPeaks(xNp, fpPar)
 
-# ADV.plot_dataset(bars, 'TSLA')
+
 ADV.plot_bars_peaks(bars, peaksH, peaksL)
 
-# plt.plot(x)
 
-# plt.plot(peaks, x[peaks], "x")
-
-# plt.plot(np.zeros_like(x), "--", color="gray")
-
-# plt.show()
