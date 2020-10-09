@@ -10,7 +10,7 @@ from collections import *
 btc = yf.download('BTC-USD', '2019-09-01',  interval="1H")
 
 btcNp = btc.to_numpy()
-bars = pd.read_csv('AUDCAD-M1-Forex_245.csv', header=0, nrows=20000, parse_dates=[[0, 1]])
+bars = pd.read_csv('AUDCAD_raw_tick-M5-NoSession.csv', header=0, nrows=20000, parse_dates=[0])
 
 xClose = bars['Close']
 xNp = bars.to_numpy()
