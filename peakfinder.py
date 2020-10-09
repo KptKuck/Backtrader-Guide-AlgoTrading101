@@ -4,8 +4,34 @@ import pandas as pd
 import advance_plotting as ADV
 from scipy.signal import find_peaks
 import yfinance as yf
+import logging
+from UTIL.logger import init_logger
+import UTIL.Results as mDir
+
 
 from collections import *
+# init logger
+
+log = init_logger(__name__, show_debug=True)
+log.info("Logger %s started", __name__)
+
+# check and create results dir
+resultPath = ""
+res = mDir.check('results', log)
+if res[0]:
+    print("res ok")
+    resultPath = res[2]
+    fh = logging.FileHandler(resultPath + "\\client_debug.log")
+    fh.setLevel(logging.DEBUG)
+    log.addHandler(fh)
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)-15s %(funcName)-30s %(message)s')
+    fh.setFormatter(formatter)
+    log.addHandler(fh)
+else:
+    print("res not ok")
+
+
+
 
 btc = yf.download('BTC-USD', '2019-09-01',  interval="1H")
 
