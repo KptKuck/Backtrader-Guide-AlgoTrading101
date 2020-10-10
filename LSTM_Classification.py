@@ -161,7 +161,7 @@ def get_lstm_model(x1, x2):
 def train_model(model, X_train, Y_train, X_test, Y_test):
     history = model.fit(X_train, Y_train,
                         epochs=10,
-                        batch_size=32,
+                        batch_size=16,
                         verbose=2,
                         validation_data=(X_test, Y_test),
                         callbacks=[tensorboard_callback, reduce_lr, checkpointer, es],

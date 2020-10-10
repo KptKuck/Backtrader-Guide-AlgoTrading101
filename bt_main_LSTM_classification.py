@@ -34,23 +34,22 @@ if res[0]:
 else:
     print("res not ok")
 
-
 # Instantiate Cerebro engine
 cerebro = bt.Cerebro()
 log.debug("Cerebro instance loaded")
 # Set data parameters and add to Cerebro
 
-data = bt.feeds.YahooFinanceCSVData(
+data2 = bt.feeds.YahooFinanceCSVData(
     dataname='TSLA.csv',
     fromdate=datetime.datetime(2015, 2, 17),
     todate=datetime.datetime(2018, 1, 1))
 
-log.debug("Backtrader DataFeed loaded: %s", str(data.params.dataname))
-log.debug("Feed Parameter: FromDate: %s ", str(data.params.fromdate))
-log.debug("Feed Parameter:   ToDate: %s ", str(data.params.todate))
-log.debug("Feed Parameter: TimeFrame %s ", str(data.params.timeframe))
+log.debug("Backtrader DataFeed loaded: %s", str(data2.params.dataname))
+log.debug("Feed Parameter: FromDate: %s ", str(data2.params.fromdate))
+log.debug("Feed Parameter:   ToDate: %s ", str(data2.params.todate))
+log.debug("Feed Parameter: TimeFrame %s ", str(data2.params.timeframe))
 
-data2 = bt.feeds.GenericCSVData(
+data = bt.feeds.GenericCSVData(
 
     dataname="AUDCAD_raw_tick-M5-NoSession.csv",
 
@@ -64,18 +63,17 @@ data2 = bt.feeds.GenericCSVData(
     high=2,
     low=3,
     close=4,
-    volume=5)
+    volume=5,
+    openinterest=-1)
 
-log.debug("Backtrader DataFeed loaded: %s", str(data2.params.dataname))
-log.debug("Feed Parameter: FromDate: %s ", str(data2.params.fromdate))
-log.debug("Feed Parameter:   ToDate: %s ", str(data2.params.todate))
-log.debug("Feed Parameter: TimeFrame %s ", str(data2.params.timeframe))
+log.debug("Backtrader DataFeed loaded: %s", str(data.params.dataname))
+log.debug("Feed Parameter: FromDate: %s ", str(data.params.fromdate))
+log.debug("Feed Parameter:   ToDate: %s ", str(data.params.todate))
+log.debug("Feed Parameter: TimeFrame %s ", str(data.params.timeframe))
 
 cerebro.adddata(data)
 
-
-
-#bars = pd.read_csv('TSLA.csv')
+# bars = pd.read_csv('TSLA.csv')
 
 # th = threading.Thread(target=ADVplot.plot_dataset(bars, 'TSLA'))
 # th.start()
@@ -97,7 +95,6 @@ END_TRAIN_DATE = '2010-06-01'
 START_TEST_DATE = '2010-06-01'
 END_TEST_DATE = '2011-01-01'
 
-
 log.info("Create train_set and test_set")
 train_set = bars[(bars['DateTime'] > START_TRAIN_DATE) & (bars['DateTime'] < END_TRAIN_DATE)]
 test_set = bars[(bars['DateTime'] > START_TEST_DATE) & (bars['DateTime'] < END_TEST_DATE)]
@@ -108,15 +105,19 @@ X_train, Y_train = create_dataset(train_set)
 X_test, Y_test = create_dataset(test_set)
 log.info("Create ready")
 
-
 model = get_lstm_model(X_train.shape[1], X_train.shape[-1])
 model.summary()
 
+np.save(resultPath + "\\X1", X_train)
+np.save(resultPath + "\\X2", X_test)
+np.save(resultPath + "\\Y1", Y_train)
+np.save(resultPath + "\\Y2", Y_test)
+
 history = train_model(model, X_train, Y_train, X_test, Y_test)
 
-#mse, mae = model.evaluate(X_test, Y_test, verbose=0)
+# mse, mae = model.evaluate(X_test, Y_test, verbose=0)
 
-# plot_history(history)
+plot_history(history)
 pred = model.predict(X_test)
 
 pred = [1 if p > 0.5 else 0 for p in pred]
@@ -239,7 +240,7 @@ class NNclassification(bt.Strategy):
         self.log('Active Order Status: , %s' % order.getstatusname())
 
         if order.status in [order.Submitted, order.Accepted]:
-            #An active Buy/Sell order has been submitted/accepted - Nothing to do
+            # An active Buy/Sell order has been submitted/accepted - Nothing to do
             return
 
         if order.status in [order.Completed]:
@@ -260,7 +261,7 @@ class NNclassification(bt.Strategy):
         self.NN_input = self.calc_NN_input()
 
         # self.log('Close: %.2f, ATR: %.4f' % (self.dataclose[0], ATR))
-        self.pred = model.predict(self.NN_input, batch_size=64)
+        self.pred = model.predict(self.NN_input, batch_size=16)
         self.signal = [1 if p > 0.5 else 0 for p in self.pred]
         # self.log('Signal: %.d, ' % (self.signal[0]))
         # self.signal_last = self.signal[0]
@@ -316,7 +317,7 @@ cerebro.addsizer(bt.sizers.SizerFix, stake=3)
 start_portfolio_value = cerebro.broker.getvalue()
 # Run Cerebro Engine
 results = cerebro.run(maxcpus=1)
-pl = cerebro.plot()
+#pl = cerebro.plot()
 
 end_portfolio_value = cerebro.broker.getvalue()
 pnl = end_portfolio_value - start_portfolio_value
