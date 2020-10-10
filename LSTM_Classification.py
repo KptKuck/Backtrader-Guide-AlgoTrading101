@@ -44,7 +44,7 @@ def create_dataset(data):
     openp = pd.to_numeric(data.iloc[:, 1])
     closep = pd.to_numeric(data.iloc[:, 4])
     # tradesp = pd.to_numeric(data.ix[:, 'Trades'])
-    volumep = pd.to_numeric(data.iloc[:, 6])
+    volumep = pd.to_numeric(data.iloc[:, 5])
 
     normal_close = closep.values.tolist()
     normal_open = openp.values.tolist()
@@ -160,7 +160,7 @@ def get_lstm_model(x1, x2):
 
 def train_model(model, X_train, Y_train, X_test, Y_test):
     history = model.fit(X_train, Y_train,
-                        epochs=1000,
+                        epochs=10,
                         batch_size=32,
                         verbose=2,
                         validation_data=(X_test, Y_test),

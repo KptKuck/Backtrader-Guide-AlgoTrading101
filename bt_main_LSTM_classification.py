@@ -6,54 +6,108 @@ from sklearn.metrics import matthews_corrcoef
 
 from strategies import *
 
+import logging
+from UTIL.logger import init_logger
+import UTIL.Results as mDir
+
 import threading
 
 import advance_plotting as ADVplot
 
+# init logger
+
+log = init_logger(__name__, show_debug=True)
+log.info("Logger %s started", __name__)
+
+# check and create results dir
+resultPath = ""
+res = mDir.check('results', log)
+if res[0]:
+    print("res ok")
+    resultPath = res[2]
+    fh = logging.FileHandler(resultPath + "\\client_debug.log")
+    fh.setLevel(logging.DEBUG)
+    log.addHandler(fh)
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)-15s %(funcName)-30s %(message)s')
+    fh.setFormatter(formatter)
+    log.addHandler(fh)
+else:
+    print("res not ok")
+
+
 # Instantiate Cerebro engine
 cerebro = bt.Cerebro()
-
+log.debug("Cerebro instance loaded")
 # Set data parameters and add to Cerebro
+
 data = bt.feeds.YahooFinanceCSVData(
     dataname='TSLA.csv',
     fromdate=datetime.datetime(2015, 2, 17),
     todate=datetime.datetime(2018, 1, 1))
 
+log.debug("Backtrader DataFeed loaded: %s", str(data.params.dataname))
+log.debug("Feed Parameter: FromDate: %s ", str(data.params.fromdate))
+log.debug("Feed Parameter:   ToDate: %s ", str(data.params.todate))
+log.debug("Feed Parameter: TimeFrame %s ", str(data.params.timeframe))
+
+data2 = bt.feeds.GenericCSVData(
+
+    dataname="AUDCAD_raw_tick-M5-NoSession.csv",
+
+    fromdate=datetime.datetime(2010, 1, 1),
+    todate=datetime.datetime(2012, 1, 1),
+
+    dtformat='%Y-%m-%d %H:%M',
+
+    datetime=0,
+    open=1,
+    high=2,
+    low=3,
+    close=4,
+    volume=5)
+
+log.debug("Backtrader DataFeed loaded: %s", str(data2.params.dataname))
+log.debug("Feed Parameter: FromDate: %s ", str(data2.params.fromdate))
+log.debug("Feed Parameter:   ToDate: %s ", str(data2.params.todate))
+log.debug("Feed Parameter: TimeFrame %s ", str(data2.params.timeframe))
+
 cerebro.adddata(data)
 
-START_TRAIN_DATE: str = '2015-02-17'
-END_TRAIN_DATE = '2018-01-01'
-START_TEST_DATE = '2018-01-01'
-END_TEST_DATE = '2020-03-09'
 
-bars = pd.read_csv('TSLA.csv')
+
+#bars = pd.read_csv('TSLA.csv')
 
 # th = threading.Thread(target=ADVplot.plot_dataset(bars, 'TSLA'))
 # th.start()
 
-data2 = bt.feeds.GenericCSVData(
 
-    dataname='TSLA.csv',
-
-    fromdate=datetime.datetime(2015, 2, 17),
-    todate=datetime.datetime(2018, 1, 1),
-
-    dtformat='%Y-%m-%d',
-
-    datetime=0,
-    high=2,
-    low=3,
-    open=1,
-    close=4,
-    volume=6)
 cerebro.adddata(data2)
 
-train_set = bars[(bars['Date'] > START_TRAIN_DATE) & (bars['Date'] < END_TRAIN_DATE)]
+log.info("Read CSV Data")
+bars = pd.read_csv('AUDCAD_raw_tick-M5-NoSession.csv', header=0, nrows=500000, parse_dates=[0])
 
-test_set = bars[(bars['Date'] > START_TEST_DATE) & (bars['Date'] < END_TEST_DATE)]
+log.info("Dataframe Size: %d", bars.size)
+log.info("Dataframe Shape %s", bars.shape.__str__())
 
+xClose = bars['Close']
+xNp = bars.to_numpy()
+
+START_TRAIN_DATE = '2010-01-01'
+END_TRAIN_DATE = '2010-06-01'
+START_TEST_DATE = '2010-06-01'
+END_TEST_DATE = '2011-01-01'
+
+
+log.info("Create train_set and test_set")
+train_set = bars[(bars['DateTime'] > START_TRAIN_DATE) & (bars['DateTime'] < END_TRAIN_DATE)]
+test_set = bars[(bars['DateTime'] > START_TEST_DATE) & (bars['DateTime'] < END_TEST_DATE)]
+log.info("Create ready")
+
+log.info("Create dataset")
 X_train, Y_train = create_dataset(train_set)
 X_test, Y_test = create_dataset(test_set)
+log.info("Create ready")
+
 
 model = get_lstm_model(X_train.shape[1], X_train.shape[-1])
 model.summary()
